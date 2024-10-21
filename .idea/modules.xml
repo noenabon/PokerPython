@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ChessSolver.iml" filepath="$PROJECT_DIR$/.idea/ChessSolver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/PokerPython.iml" filepath="$PROJECT_DIR$/.idea/PokerPython.iml" />
     </modules>
   </component>
 </project>
