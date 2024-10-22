@@ -1,3 +1,4 @@
+from operator import index
 from colorama import Fore, Style, init
 from tkinter import *
 from random import *
@@ -103,9 +104,11 @@ class Partie:
         self.pot = 0
         self.ordre = [joueur] + robots
 
-    def reset(self):
+    def reset(self,robots):
         # Réinitialise le jeu de cartes
         self.jeu_de_cartes = JeuDeCartes()
+        self.blind = randint(0,len(robots))
+        self.pot = 0
 
         # Réinitialise les mains des joueurs
         self.joueur.cartes = []
@@ -130,22 +133,22 @@ class Partie:
         places = nb_robots
 
         # Création d'une ligne de séparation
-        for i in range(len(robots)):
+        if robots[0].fold:
+            print(f"{LB}+---------{Reset}",end="")
+        else:
+            print("+---------",end="")
+        for i in range(1,len(robots)):
             if robots[i].fold:
-                if i == 0:
-                    print(f"{LB}+{Reset}",end="")
-                    print(f"{LB}---------+{Reset}",end="")
-                elif i == nb_robots-1:
-                    print(f"{LB}---------+{Reset}")
+                if robots[i-1].fold:
+                    print(f"{LB}+---------{Reset}",end="")
                 else:
-                    print(f"{LB}---------+{Reset}",end="")
+                    print(f"+{LB}---------{Reset}",end="")
             else:
-                if i == 0:
-                    print("+",end="")
-                if i == nb_robots-1:
-                    print("---------+")
-                else:
-                    print("---------+",end="")
+                print(f"+---------",end="")
+        if robots[-1].fold:
+            print(f"{LB}+{Reset}")
+        else:
+            print("+")
 
         # Afficher les robots en haut de la table
         for i in range(nb_robots):
@@ -170,23 +173,22 @@ class Partie:
             print("|")
 
         # Création d'une ligne de séparation
-        for i in range(len(robots)):
-            # print(i,end="")
+        if robots[0].fold:
+            print(f"{LB}+---------{Reset}",end="")
+        else:
+            print("+---------",end="")
+        for i in range(1,len(robots)):
             if robots[i].fold:
-                if i == 0:
-                    print(f"{LB}+{Reset}",end="")
-                    print(f"{LB}---------+{Reset}",end="")
-                elif i == nb_robots-1:
-                    print(f"{LB}---------+{Reset}")
+                if robots[i-1].fold:
+                    print(f"{LB}+---------{Reset}",end="")
                 else:
-                    print(f"{LB}---------+{Reset}",end="")
+                    print(f"+{LB}---------{Reset}",end="")
             else:
-                if i == 0:
-                    print("+",end="")
-                if i == nb_robots-1:
-                    print("---------+")
-                else:
-                    print("---------+",end="")
+                print(f"+---------",end="")
+        if robots[-1].fold:
+            print(f"{LB}+{Reset}")
+        else:
+            print("+")
 
         if joueur.fold:
             # Afficher le joueur au centre en bas
@@ -221,15 +223,9 @@ class Jeu:
     while True:
         # Création et initialisation d'une nouvelle partie
         partie = Partie(joueur, robots)
-        partie.reset()
+        partie.reset(robots)
         # Distribution des cartes
         partie.distribuer_cartes(joueur,robots,jeu_de_cartes)
-
-        robots[0].fold = True
-        # robots[1].fold = True
-        # robots[4].fold = True
-        robots[2].fold = True
-        robots[3].fold = True
 
         # Afficher la table
         print("              -------- Table -------- \n")
