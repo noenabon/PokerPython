@@ -81,7 +81,6 @@ class Joueur:
             else:
                 choix = input("Bet / Raise / Fold  -->  ").lower()
 
-pass
 
 class JeuDeCartes:
     def __init__(self):
