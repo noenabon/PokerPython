@@ -1,5 +1,9 @@
+from colorama import Fore, Style, init
 from tkinter import *
 from random import *
+init()
+LB = Fore.LIGHTBLACK_EX
+Reset = Style.RESET_ALL
 
 # fenetre = Tk()
 #
@@ -19,17 +23,64 @@ class Joueur:
         self.cartes = []
         self.jetons = 1000
         self.victoires = 0
+        self.mise = 0
+        self.fold = False
     def recevoir_carte(self, carte):
         self.cartes.append(carte)
 
 
     def afficher_cartes(self):
         for x in range(len(self.cartes)):
-            print(self.cartes[x],end=" ")
+            carte = self.cartes[x]
+            if "P" in carte:
+                couleur = "♠"
+            elif "C" in carte:
+                couleur = "♥"
+            elif "T" in carte:
+                couleur = "♣"
+            elif "K" in carte:
+                couleur = "♦"
+            carte = carte.replace("P","").replace("C","").replace("T","").replace("K","")
+            carte = carte.replace("1","As")
+            carte = carte.replace("v","Valet")
+            carte = carte.replace("d","Dame")
+            carte = carte.replace("r","Roi")
+
+            print(carte,"de",couleur, end="")
+            if x < len(self.cartes)-1:
+                print(" | ",end="")
+        print("\n\n")
 
 
-    def décision(self):
-        pass
+    def décision(self,joueur,robots,partie):
+        if joueur:
+            if robots[-0].mise == 0:
+                choix = input("Check / Bet / Fold  -->  ").lower()
+                if "check" in choix:
+                    pass
+                elif "bet" in choix:
+                    while True:
+                        try:
+                            mise = int(input("Montant : "))
+                            if mise > 0:  # Vérifie que le montant est positif
+                                break  # Sort de la boucle si l'entrée est valide
+                            else:
+                                print("Le montant doit être supérieur à 0.")
+                        except ValueError:
+                            print("Veuillez entrer un nombre valide.")
+                    partie.pot += mise
+                    self.jetons -= mise
+                    print(f" #-- Vous misez {mise} jetons.\n --- Il vous reste {self.jetons} jetons.")
+                elif "fold" in choix:
+                    self.fold = True
+                    print(" #-- Vous vous couchez.")
+                else:
+                    print("Entrée invalide")
+                    choix = input("Check / Bet / Fold  -->  ").lower()
+            else:
+                choix = input("Bet / Raise / Fold  -->  ").lower()
+
+pass
 
 class JeuDeCartes:
     def __init__(self):
@@ -48,6 +99,9 @@ class Partie:
         self.joueur = joueur
         self.robots = robots
         self.jeu_de_cartes = JeuDeCartes()
+        self.blind = randint(0,len(robots))
+        self.pot = 0
+        self.ordre = [joueur] + robots
 
     def reset(self):
         # Réinitialise le jeu de cartes
@@ -76,33 +130,89 @@ class Partie:
         places = nb_robots
 
         # Création d'une ligne de séparation
-        print("+" + "---------+" * places)
+        for i in range(len(robots)):
+            if robots[i].fold:
+                if i == 0:
+                    print(f"{LB}+{Reset}",end="")
+                    print(f"{LB}---------+{Reset}",end="")
+                elif i == nb_robots-1:
+                    print(f"{LB}---------+{Reset}")
+                else:
+                    print(f"{LB}---------+{Reset}",end="")
+            else:
+                if i == 0:
+                    print("+",end="")
+                if i == nb_robots-1:
+                    print("---------+")
+                else:
+                    print("---------+",end="")
 
         # Afficher les robots en haut de la table
         for i in range(nb_robots):
-            if i == 0:
-                print(f"| {robots[i].nom:<3} ", end="")
+            if robots[i].fold:
+                if i == 0:
+                    print(f"{LB}| {robots[i].nom:<3} {Reset}", end="")
+                else:
+                    if robots[i-1].fold:
+                        print(f"{LB}| {robots[i].nom:<3} {Reset}", end="")
+                    else:
+                        print(f"| {LB}{robots[i].nom:<3} {Reset}", end="")
             else:
-                print(f"| {robots[i].nom:<3} ", end="")
-        print("|")  # Fin de la ligne de robots
+                if i == 0:
+                    print(f"| {robots[i].nom:<3} ", end="")
+                else:
+                    print(f"| {robots[i].nom:<3} ", end="")
 
-        # Ligne de séparation
-        print("+" + "---------+" * places)
+        # Fin de la ligne de robots
+        if robots[len(robots)-1].fold:
+            print(f"{LB}|{Reset}")
+        else:
+            print("|")
 
-        # Afficher le joueur au centre en bas
-        print(" " * int((((1 + 10 * places)-len(joueur.nom)-8) / 2)),f"| {joueur.nom:<3} |")
+        # Création d'une ligne de séparation
+        for i in range(len(robots)):
+            # print(i,end="")
+            if robots[i].fold:
+                if i == 0:
+                    print(f"{LB}+{Reset}",end="")
+                    print(f"{LB}---------+{Reset}",end="")
+                elif i == nb_robots-1:
+                    print(f"{LB}---------+{Reset}")
+                else:
+                    print(f"{LB}---------+{Reset}",end="")
+            else:
+                if i == 0:
+                    print("+",end="")
+                if i == nb_robots-1:
+                    print("---------+")
+                else:
+                    print("---------+",end="")
 
-        # Ligne de séparation finale
-        print(" " * int((((1 + 10 * places)-len(joueur.nom)-4) / 2)), end="\b")
-        print("+" + "-" * len(joueur.nom) + "--" + "+")
+        if joueur.fold:
+            # Afficher le joueur au centre en bas
+            print(LB+" " + " " * int((((1 + 10 * places)-len(joueur.nom)-8) / 2)),f"| {joueur.nom:<3} |")
+            # Ligne de séparation finale
+            print(" " + " " * int((((1 + 10 * places)-len(joueur.nom)-4) / 2)), end="\b")
+            print("+" + "-" * len(joueur.nom) + "--" + "+\n"+Reset)
+        else:
+            # Afficher le joueur au centre en bas
+            print(" " + " " * int((((1 + 10 * places)-len(joueur.nom)-8) / 2)),f"| {joueur.nom:<3} |")
+            # Ligne de séparation finale
+            print(" " + " " * int((((1 + 10 * places)-len(joueur.nom)-4) / 2)), end="\b")
+            print("+" + "-" * len(joueur.nom) + "--" + "+\n")
 
+    def tourner_blind(self, robots):
+        if self.blind == len(robots):
+            self.blind = 0
+        else:
+            self.blind += 1
 
 class Jeu:
     print("\n\n\n\n\n\n")
     # nom_du_joueur = input("Nom du joueur : ")
     nom_du_joueur = "Noé"
     # nb_robots = int(input("Nombre de robots : "))
-    nb_robots = 3
+    nb_robots = 5
 
     joueur = Joueur(nom_du_joueur)
     robots = [Joueur(f"Robot {x}") for x in range(nb_robots)]
@@ -115,12 +225,22 @@ class Jeu:
         # Distribution des cartes
         partie.distribuer_cartes(joueur,robots,jeu_de_cartes)
 
-        # Afficher la table
-        print(" -------- Table -------- \n")
-        partie.afficher_table(joueur,robots)
-        print(" ------ Vos Cartes ------ \n")
-        joueur.afficher_cartes()
+        robots[0].fold = True
+        # robots[1].fold = True
+        # robots[4].fold = True
+        robots[2].fold = True
+        robots[3].fold = True
 
+        # Afficher la table
+        print("              -------- Table -------- \n")
+        partie.afficher_table(joueur,robots)
+        print("              ------ Vos Cartes ------ \n")
+        joueur.afficher_cartes()
+        # Prendre décision
+        if partie.blind == 0:
+            joueur.décision(True,robots,partie)
+        else:
+            robots[partie.blind-1].décision(False,robots,partie)
 
         # Logique de la partie ici (mise, tours de jeu, etc.)
         break  # Juste pour arrêter la boucle infinie après une partie dans cet exemple
