@@ -53,7 +53,7 @@ class Joueur:
         print("\n\n")
 
 
-    def décision(self,joueur,robots,partie):
+    def decision(self,joueur,robots,partie):
         if joueur:
             if robots[-0].mise == 0:
                 choix = input("Check / Bet / Fold  -->  ").lower()
@@ -234,9 +234,9 @@ class Jeu:
         joueur.afficher_cartes()
         # Prendre décision
         if partie.blind == 0:
-            joueur.décision(True,robots,partie)
+            joueur.decision(True, robots, partie)
         else:
-            robots[partie.blind-1].décision(False,robots,partie)
+            robots[partie.blind - 1].decision(False, robots, partie)
 
         # Logique de la partie ici (mise, tours de jeu, etc.)
         break  # Juste pour arrêter la boucle infinie après une partie dans cet exemple
