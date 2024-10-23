@@ -5,6 +5,10 @@ from random import *
 init()
 LB = Fore.LIGHTBLACK_EX
 Reset = Style.RESET_ALL
+RB = "\033[41m"
+BB = "\033[40m"
+Bold = "\033[1m"
+ResetBold = "\033[22m"
 
 # fenetre = Tk()
 #
@@ -29,6 +33,8 @@ class Joueur:
     def recevoir_carte(self, carte):
         self.cartes.append(carte)
 
+    def remove_cartes(self):
+        self.cartes = []
 
     def afficher_cartes(self):
         for x in range(len(self.cartes)):
@@ -42,12 +48,12 @@ class Joueur:
             elif "K" in carte:
                 couleur = "♦"
             carte = carte.replace("P","").replace("C","").replace("T","").replace("K","")
-            carte = carte.replace("1","As")
+            carte = carte.replace("1","1" if "10" in carte else "As")
             carte = carte.replace("v","Valet")
             carte = carte.replace("d","Dame")
             carte = carte.replace("r","Roi")
 
-            print(carte,"de",couleur, end="")
+            print((RB if (couleur == "♥" or couleur == "♦") else BB),carte,"de",Bold+couleur,Reset, end="")
             if x < len(self.cartes)-1:
                 print(" | ",end="")
         print("\n\n")
@@ -102,6 +108,7 @@ class Partie:
         self.blind = randint(0,len(robots))
         self.pot = 0
         self.ordre = [joueur] + robots
+        self.table = []
 
     def reset(self,robots):
         # Réinitialise le jeu de cartes
@@ -202,11 +209,45 @@ class Partie:
             print(" " + " " * int((((1 + 10 * places)-len(joueur.nom)-4) / 2)), end="\b")
             print("+" + "-" * len(joueur.nom) + "--" + "+\n")
 
+    def afficher_cartes(self):
+        for x in range(len(self.table)):
+            carte = self.table[x]
+            if "P" in carte:
+                couleur = "♠"
+            elif "C" in carte:
+                couleur = "♥"
+            elif "T" in carte:
+                couleur = "♣"
+            elif "K" in carte:
+                couleur = "♦"
+            carte = carte.replace("P","").replace("C","").replace("T","").replace("K","")
+            carte = carte.replace("1","1" if "10" in carte else "As")
+            carte = carte.replace("v","Valet")
+            carte = carte.replace("d","Dame")
+            carte = carte.replace("r","Roi")
+
+            texte = f"{carte} de {couleur}"
+            print(f"{RB if (couleur == "♥" or couleur == "♦") else BB}{Bold}{(texte):^10}{Reset}", end="")
+            if x < len(self.table)-1:
+                print(" | ",end="")
+
     def tourner_blind(self, robots):
         if self.blind == len(robots):
             self.blind = 0
         else:
             self.blind += 1
+
+    def flop(self,jeu_de_cartes):
+        for i in range(3):
+            carte = jeu_de_cartes.cartes[randint(0,len(jeu_de_cartes.cartes)-1)]
+            self.table.append(carte)
+            jeu_de_cartes.cartes.remove(carte)
+
+    def turn_river(self,jeu_de_cartes):
+        carte = jeu_de_cartes.cartes[randint(0,len(jeu_de_cartes.cartes)-1)]
+        self.table.append(carte)
+        jeu_de_cartes.cartes.remove(carte)
+
 
 class Jeu:
     print("\n\n\n\n\n\n")
@@ -227,17 +268,47 @@ class Jeu:
         partie.distribuer_cartes(joueur,robots,jeu_de_cartes)
 
         # Afficher la table
-        print("              -------- Table -------- \n")
+        print("              -----------------------\n              ------- Joueurs ------- \n              -----------------------\n")
         partie.afficher_table(joueur,robots)
-        print("              ------ Vos Cartes ------ \n")
+        print("              -----------------------\n              ------ Vos Cartes ----- \n              -----------------------\n")
         joueur.afficher_cartes()
-        # Prendre décision
-        if partie.blind == 0:
-            joueur.decision(True, robots, partie)
-        else:
-            robots[partie.blind - 1].decision(False, robots, partie)
 
-        # Logique de la partie ici (mise, tours de jeu, etc.)
-        break  # Juste pour arrêter la boucle infinie après une partie dans cet exemple
+        while not joueur.fold:
+            couche = 0
+            for robot in robots:
+                if robot.fold:
+                    couche += 1
+            if couche == len(robots):
+                break
+
+            # Flop
+            partie.flop(jeu_de_cartes)
+            print("              -----------------------\n              -------- Table --------              \n              -----------------------\n")
+            partie.afficher_cartes()
+            print("\n--------------- Flop ---------------\n\n")
+
+
+            # Turn
+            partie.turn_river(jeu_de_cartes)
+            print("              -----------------------\n              -------- Table --------              \n              -----------------------\n")
+            partie.afficher_cartes()
+            print("\n--------------- Flop --------------- + -- Turn -- \n\n")
+
+            # River
+            partie.turn_river(jeu_de_cartes)
+            print("              -----------------------\n              -------- Table --------              \n              -----------------------\n")
+            partie.afficher_cartes()
+            print("\n--------------- Flop --------------- + -- Turn -- + -- River --\n\n")
+            break
+
+            # Prendre décision
+            if partie.blind == 0:
+                joueur.decision(True, robots, partie)
+            else:
+                robots[partie.blind - 1].decision(False, robots, partie)
+        break
+
+
+
 
 
